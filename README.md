@@ -21,9 +21,46 @@ Generate sample rules file:
 
 Fake database:
 
-    dbfaker.py -H 127.0.0.1 -u myuser -p 'secret' -d mydatabase
+    dbfaker.py -H 127.0.0.1 -u myuser -p 'secret' -d mydatabase -irf rules.json
 
 ### Faking rules
+The tool uses a json `rules` file to fake the database. The rules file contains a list of tables, columns and faking rules for them.
+The json hierarchy is the following `table -> rule -> columns`.
 
-## Benchmarks
-vv bn
+You can generate a sample rules file using the `-grf` option. Example:
+
+    dbfaker.py -grf
+
+**Supported Rules:**
+
+* `_email` - replaces the column value with a uniquely generated e-mail address
+* `_password` - replaces the values with a default password (*default: 1234qwer*). Note: All rows get the same value
+* `_first_name` - replaces the value with generated first names
+* `_last_name`- replaces the value with a generated last names
+* `_full_name`- replaces the value with a generated full names
+* `_text`- replaces the value with a generated lipsum text. Note: All rows get the same value
+* `_address` - replaces the value with a generated address. Note: All rows get the same value
+* `_empty_string` - empties the column (*sets an empty string*)
+* `_company_name` - replaces the value with generated company names
+* `_zeroed` - sets column to disabled (zero), useful for boolean columns (tinyint)
+
+**Example:**
+
+    {
+      "table_1": {
+          "_email": [
+              "emailColumn"
+          ],
+          "_password": [
+              "passwordColumn"
+          ]
+      },
+      "table_2": {
+          "_address": [
+              "addressColumn"
+          ],
+          "_full_name": [
+              "nameColumn"
+          ]
+      }
+    }

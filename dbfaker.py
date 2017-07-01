@@ -17,7 +17,7 @@ parser.add_argument('-d', '--database', help='The dababase name', default='mydat
 defaultFakeValues = parser.add_argument_group('Default fake values.')
 defaultFakeValues.add_argument('-fp', '--fakePassword', help='Fake password value, set in the password fields', default='1234qwer')
 fakeRules = parser.add_argument_group('Fake rules options.')
-fakeRules.add_argument('-irf', '--inputRulesFile', help='The file containing the faking rules.', required=True)
+fakeRules.add_argument('-irf', '--inputRulesFile', help='The file containing the faking rules.', default="rules.json")
 fakeRules.add_argument('-grf', '--generateRulesFile', help='Generate faking rules file.')
 args = parser.parse_args()
 
@@ -50,14 +50,14 @@ tableRules = {
 
 if args.generateRulesFile is not None:
     with open(args.generateRulesFile, 'w') as file:
-        json.dump(tableRules, fp, indent=4, sort_keys=True)
-    print "Sample rules written to {}".format(args.generateRulesFile)
+        json.dump(tableRules, file, indent=4, sort_keys=True)
+    print "Sample rules written to: {}".format(args.generateRulesFile)
     exit(0)
 
 if args.inputRulesFile is not None:
     with open(args.inputRulesFile) as file:
         tableRules = json.load(file)
-    print "Rules loaded from {}..\n".format(args.inputRulesFile)
+    print "Rules loaded from: {}..\n".format(args.inputRulesFile)
 
 # db connection
 db = MySQLdb.connect(host = args.host, user = args.user, passwd = args.password, db = args.database, port = int(args.port))
