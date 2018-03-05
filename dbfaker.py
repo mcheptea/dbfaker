@@ -2,6 +2,7 @@
 
 import argparse
 from faker import Factory
+from collections import OrderedDict
 import json
 import MySQLdb
 
@@ -116,7 +117,7 @@ if args.inputRulesFile is not None:
 
 if args.inputSynchronizationFile is not None:
     with open(args.inputSynchronizationFile) as file:
-        synchronizationRules = json.load(file)
+        synchronizationRules = json.load(file, object_pairs_hook=OrderedDict)
     print "Rules loaded from: {}..\n".format(args.inputSynchronizationFile)
 
 # db connection
@@ -328,10 +329,56 @@ def setToZero(table, column):
     print "ok"
 
 
+def extract_value_column(joins):
+    if 'join' in joins:
+        return extract_value_column(joins['join'])
+    join_table = joins['table']
+    if 'columns' in joins:
+        return "CONCAT_WS(' ', {0}.{1})".format(join_table, ", {0}.".format(join_table).join(joins['columns']))
+    return "{0}.{1}".format(join_table, joins['column'])
+
+
+def build_joins(table_for_join, join):
+    additional_join_statement = ''
+    if 'join' in join:
+        additional_join_statement = build_joins(join['table'], join['join'])
+    current_join_statement = "INNER JOIN {2} ON {2}.{3} = {0}.{1} ".format(table_for_join, join['on-this-column'],
+                                                                           join['table'], join['on-sync-column'])
+
+    return current_join_statement + additional_join_statement
+
+
+def synchronize_table_column(synchronization_table, synchronization_column, joins_list):
+    for joins in joins_list:
+        update_table_statement = "UPDATE {} ".format(synchronization_table)
+        value_column = extract_value_column(joins)
+        set_statement = "SET {0}.{1} = {2} ".format(table, synchronization_column, value_column)
+        join_statement = build_joins(synchronization_table, joins)
+        sql = update_table_statement + join_statement + set_statement + ';'
+        cursor = db.cursor()
+        try:
+            cursor.execute(sql)
+            db.commit()
+        except Exception, e:
+            print "x"
+            print "      Error: " + str(e)
+            db.rollback()
+            return
+        print "        Synchronized from {}".format(value_column)
+
+
 # run
 for table in tableRules:
     print "Faking {}..".format(table)
     processTable(table, tableRules[table])
+
+print "\n\n"
+
+for table in synchronizationRules:
+    print "Synchronization of {}".format(table)
+    for column in synchronizationRules[table]:
+        print "    Synchronize {}".format(column)
+        synchronize_table_column(table, column, synchronizationRules[table][column])
 
 db.close()
 print "\n[ Done ]"
