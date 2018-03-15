@@ -7,7 +7,8 @@ The purpose of this tool is to fake sensitive data in database. This procedure i
 
 1. `apt install python`
 2. `apt install libmysqlclient-dev`
-3. `pip install MySQL-python Faker`
+3. `apt install python-pip`
+4. `pip install MySQL-python Faker`
 
 ## Usage
 
@@ -62,5 +63,66 @@ You can generate a sample rules file using the `-grf` option. Example:
           "_full_name": [
               "nameColumn"
           ]
+      }
+    }
+
+
+### Synchronize rules
+The tool uses a jon `synchronize` file to keep some fields synchronized in the database.
+The synchronize file contains list of tables, list of columns and synchronization tables with their columns.
+
+You can generate a sample synchronize file using the `-grs` option. Example:
+
+    dbfaker.py -grs
+    
+**Supported cases**
+
+* Single INNER Join - Can be used to synchronize fields in different tables that have column with common value
+* Multiple INNER Joins - Can be used to synchronize fields in 2 or more table that can be joined and should have synchronized single column with base table
+* Concatenated Column - For case of the generated values, columns from one table can be concatenated with space character
+
+**Example:**
+
+    {
+      "table_1": {
+        "table_1_column_name_1": [
+          {
+            "table": "table_2",
+            "column": "table_2_column_name_1",
+            "on-this-column": "table_1_column_name_2",
+            "on-sync-column": "table_2_column_name_2"
+          },
+          {
+            "table": "table_3",
+            "column": "table_3_column_name_1",
+            "on-this-column": "table_1_column_name_2",
+            "on-sync-column": "table_3_column_name_2"
+          }
+        ]
+      },
+      "table_4": {
+        "table_4_column_name_1": [
+          {
+            "table": "table_5",
+            "columns": ["table_5_column_name_1", "table_5_column_name_2"],
+            "on-this-column": "table_4_column_name_2",
+            "on-sync-column": "table_5_column_name_3"
+          }
+        ]
+      },
+      "table_6": {
+        "table_6_column_name_1": [
+          {
+            "table": "table_7",
+            "join": {
+              "column": "table_8_column_name_1",
+              "table": "table_8",
+              "on-this-column": "table_7_column_name_1",
+              "on-sync-column": "table_8_column_name_2"
+            },
+            "on-this-column": "table_6_column_name_2",
+            "on-sync-column": "table_7_column_name_2"
+          },
+        ]
       }
     }
