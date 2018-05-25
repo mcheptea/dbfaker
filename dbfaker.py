@@ -5,6 +5,7 @@ from faker import Factory
 from collections import OrderedDict
 import json
 import MySQLdb
+import subprocess
 
 print "[ Database Faker ]\n"
 
@@ -30,16 +31,17 @@ args = parser.parse_args()
 FAKE_PASSWORD = args.fakePassword
 
 # data types
-EMAIL           = "_email"          # fake email
-PASSWORD        = "_password"       # set password
-FIRST_NAME      = "_first_name"     # fake first name
-LAST_NAME       = "_last_name"      # fake last name
-FULL_NAME       = "_full_name"      # fake full name
-TEXT            = "_text"           # fake lipsum text
-ADDRESS         = "_address"        # fake random address
-EMPTY_STRING    = "_empty_string"   # empties the field
-COMPANY_NAME    = "_company_name"   # fake company name
-ZEROED          = "_zeroed"         # sets field to disabled (zero), useful for boolean (tinyint)
+EMAIL = "_email"  # fake email
+PASSWORD = "_password"  # set password
+PASSWORD_PHP_HASH = "_password_php_hash"  # set password
+FIRST_NAME = "_first_name"  # fake first name
+LAST_NAME = "_last_name"  # fake last name
+FULL_NAME = "_full_name"  # fake full name
+TEXT = "_text"  # fake lipsum text
+ADDRESS = "_address"  # fake random address
+EMPTY_STRING = "_empty_string"  # empties the field
+COMPANY_NAME = "_company_name"  # fake company name
+ZEROED = "_zeroed"  # sets field to disabled (zero), useful for boolean (tinyint)
 
 # sample table rule set
 tableRules = {
@@ -139,6 +141,8 @@ def fakeColumnByRule(table, column, rule):
         fakeEmails(table, column)
     elif rule == PASSWORD:
         fakePasswords(table, column)
+    elif rule == PASSWORD_PHP_HASH:
+        fakePhpPasswords(table, column)
     elif rule == LAST_NAME or rule == FIRST_NAME:
         fakeNames(table, column, rule)
     elif rule == TEXT:
@@ -253,6 +257,23 @@ def fakeCompanyNames(table, column):
 
 def fakePasswords(table, column, password=FAKE_PASSWORD):
     sql = "UPDATE {0} SET {1} = '{2}';".format(table, column, password)
+    cursor = db.cursor()
+    try:
+        cursor.execute(sql)
+        db.commit()
+    except Exception, e:
+        print "x"
+        print "      Error: " + str(e)
+        db.rollback()
+        return
+    print "ok"
+
+
+def fakePhpPasswords(table, column, password=FAKE_PASSWORD):
+    phpCommand = 'php -r "echo password_hash(\'{}\', PASSWORD_BCRYPT);"'.format(password)
+    phpProcess = subprocess.Popen(phpCommand, shell=True, stdout=subprocess.PIPE)
+    password_hash = phpProcess.stdout.read()
+    sql = "UPDATE {0} SET {1} = '{2}';".format(table, column, password_hash)
     cursor = db.cursor()
     try:
         cursor.execute(sql)
