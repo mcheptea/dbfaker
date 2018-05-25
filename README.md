@@ -36,6 +36,7 @@ You can generate a sample rules file using the `-grf` option. Example:
 
 * `_email` - replaces the column value with a uniquely generated e-mail address
 * `_password` - replaces the values with a default password (*default: 1234qwer*). Note: All rows get the same value
+* `_password_php_hash` - replaces the values with a php bcrypt encrypted default password from previous rule (*example: $2y$10$jfLBuyIDiZsUzryANr00H.jPSH2k8bQEYpckhobtVuIzXd.Q4xoje*). Note: All rows get the same value
 * `_first_name` - replaces the value with generated first names
 * `_last_name`- replaces the value with a generated last names
 * `_full_name`- replaces the value with a generated full names
